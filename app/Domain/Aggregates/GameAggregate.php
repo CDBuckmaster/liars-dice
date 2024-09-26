@@ -11,42 +11,43 @@ use App\Domain\Events\SpotOnWasCalled;
 
 final class GameAggregate extends AggregateRoot
 {
-    private ?string $nextPlayer = null;
-    private ?array $lastBid = null;
-    private ?array $diceValues = null;
+  private ?string $nextPlayer = null;
+  private ?array $lastBid = null;
+  private ?array $diceValues = null;
+  private ?array $diceCount = null;
 
-    public function createGame(array $players, string $firstPlayer): self
-    {
-        $this->recordThat(new GameWasCreated($players, $firstPlayer));
+  public function createGame(array $players, string $firstPlayer): self
+  {
+    $this->recordThat(new GameWasCreated($players, $firstPlayer));
 
-        return $this;
-    }
+    return $this;
+  }
 
-    public function rerollDice(array $dice): self
-    {
-        $this->recordThat(new DiceWereRerolled($dice));
+  public function rerollDice(array $dice): self
+  {
+    $this->recordThat(new DiceWereRerolled($dice));
 
-        return $this;
-    }
+    return $this;
+  }
 
-    public function playerMadeBid(string $player, int $quantity, int $face): self
-    {
-        $this->recordThat(new BidWasMade($player, $quantity, $face));
+  public function playerMadeBid(string $player, int $quantity, int $face): self
+  {
+    $this->recordThat(new BidWasMade($player, $quantity, $face));
 
-        return $this;
-    }
+    return $this;
+  }
 
-    public function playerCalledBluff(string $player): self
-    {
-        $this->recordThat(new BluffWasCalled($player));
+  public function playerCalledBluff(string $player): self
+  {
+    $this->recordThat(new BluffWasCalled($player));
 
-        return $this;
-    }
+    return $this;
+  }
 
-    public function playerCalledSpotOn(string $player): self
-    {
-        $this->recordThat(new SpotOnWasCalled($player));
+  public function playerCalledSpotOn(string $player): self
+  {
+    $this->recordThat(new SpotOnWasCalled($player));
 
-        return $this;
-    }
+    return $this;
+  }
 }

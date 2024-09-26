@@ -6,8 +6,6 @@ use App\Domain\Aggregates\GameAggregate;
 use App\Domain\Commands\CreateGameCommand;
 use App\Models\Game;
 
-use function App\Domain\Helpers\rollDicePerPlayer;
-
 class CreateGameCommandHandler
 {
   // @todo: Move this elsewhere, might need to define a game entity for this
