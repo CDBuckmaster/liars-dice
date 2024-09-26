@@ -8,6 +8,7 @@ use App\Domain\Events\DiceWereRerolled;
 use App\Domain\Events\BidWasMade;
 use App\Domain\Events\BluffWasCalled;
 use App\Domain\Events\SpotOnWasCalled;
+use App\Domain\Exceptions\GameException;
 
 final class GameAggregate extends AggregateRoot
 {
@@ -21,6 +22,10 @@ final class GameAggregate extends AggregateRoot
 
   public function createGame(array $players, string $firstPlayer): self
   {
+    if ($this->nextPlayer !== null) {
+      throw new \Exception('Game already created');
+    }
+
     $this->recordThat(new GameWasCreated($players, $firstPlayer));
 
     return $this;
@@ -28,6 +33,16 @@ final class GameAggregate extends AggregateRoot
 
   public function rerollDice(array $dice): self
   {
+    if ($this->gameOver) {
+      throw new GameException('Game is over');
+    }
+    if ($this->diceValues === null) {
+      throw new GameException('Game not created');
+    }
+    if ($this->lastBidQuantity !== null) {
+      throw new GameException('Cannot reroll dice before bid');
+    }
+
     $this->recordThat(new DiceWereRerolled($dice));
 
     return $this;
@@ -35,6 +50,33 @@ final class GameAggregate extends AggregateRoot
 
   public function playerMadeBid(string $player, int $quantity, int $face): self
   {
+    if ($this->gameOver) {
+      throw new GameException('Game is over');
+    }
+    if ($this->nextPlayer !== $player) {
+      throw new GameException('Not player\'s turn');
+    }
+    if ($this->diceValues === null) {
+      throw new GameException('Game not created');
+    }
+    if ($quantity < 1) {
+      throw new GameException('Bid quantity must be at least 1');
+    }
+    if ($face < 1 || $face > 6) {
+      throw new GameException('Bid face must be between 1 and 6');
+    }
+    if ($quantity > array_sum($this->diceCount)) {
+      throw new GameException('Bid quantity cannot be higher than total dice count');
+    }
+    if ($this->lastBidQuantity !== null && $this->lastBidFace !== null) {
+      if ($quantity < $this->lastBidQuantity) {
+        throw new GameException('Bid quantity cannot be lower than last bid');
+      }
+      if ($quantity === $this->lastBidQuantity && $face <= $this->lastBidFace) {
+        throw new GameException('Bid face cannot be lower than or equal to last bid');
+      }
+    }
+
     $this->recordThat(new BidWasMade($player, $quantity, $face));
 
     return $this;
@@ -42,68 +84,55 @@ final class GameAggregate extends AggregateRoot
 
   public function playerCalledBluff(string $player): self
   {
+    if ($this->gameOver) {
+      throw new GameException('Game is over');
+    }
+    if ($this->diceValues === null) {
+      throw new GameException('Game not created');
+    }
+    if ($this->lastBidQuantity === null || $this->lastBidFace === null) {
+      throw new GameException('Cannot call bluff before bid');
+    }
+
     $this->recordThat(new BluffWasCalled($player));
+    $this->rerollDiceAndRecord();
 
     return $this;
   }
 
   public function playerCalledSpotOn(string $player): self
   {
+    if ($this->gameOver) {
+      throw new GameException('Game is over');
+    }
+    if ($this->diceValues === null) {
+      throw new GameException('Game not created');
+    }
+    if ($this->lastBidQuantity === null || $this->lastBidFace === null) {
+      throw new GameException('Cannot call bluff before bid');
+    }
+
     $this->recordThat(new SpotOnWasCalled($player));
+    $this->rerollDiceAndRecord();
 
     return $this;
   }
 
   public function applyGameWasCreated(GameWasCreated $event): void
   {
-    if ($this->nextPlayer !== null) {
-      throw new \Exception('Game already created');
-    }
+
     $this->nextPlayer = $event->firstPlayer;
-    $this->diceValues = array_fill(0, count($event->players), 0);
-    $this->diceCount = array_fill(0, count($event->players), 5);
+    $this->diceValues = array_fill_keys($event->players, []);
+    $this->diceCount = array_fill_keys($event->players, 5);
   }
 
   public function applyDiceWereRerolled(DiceWereRerolled $event): void
   {
-    if ($this->gameOver) {
-      throw new \Exception('Game is over');
-    }
-    if ($this->diceValues === null) {
-      throw new \Exception('Game not created');
-    }
-    if ($this->lastBidQuantity !== null) {
-      throw new \Exception('Cannot reroll dice before bid');
-    }
     $this->diceValues = $event->dice;
   }
 
   public function applyBidWasMade(BidWasMade $event): void
   {
-    if ($this->gameOver) {
-      throw new \Exception('Game is over');
-    }
-    if ($this->diceValues === null) {
-      throw new \Exception('Game not created');
-    }
-    if ($event->quantity < 1) {
-      throw new \Exception('Bid quantity must be at least 1');
-    }
-    if ($event->face < 1 || $event->face > 6) {
-      throw new \Exception('Bid face must be between 1 and 6');
-    }
-    if ($event->quantity > array_sum($this->diceCount)) {
-      throw new \Exception('Bid quantity cannot be higher than total dice count');
-    }
-    if ($this->lastBidQuantity !== null && $this->lastBidFace !== null) {
-      if ($event->quantity < $this->lastBidQuantity) {
-        throw new \Exception('Bid quantity cannot be lower than last bid');
-      }
-      if ($event->quantity === $this->lastBidQuantity && $event->face <= $this->lastBidFace) {
-        throw new \Exception('Bid face cannot be lower than or equal to last bid');
-      }
-    }
-
     $this->lastBidQuantity = $event->quantity;
     $this->lastBidFace = $event->face;
     $this->goToNextPlayer();
@@ -111,16 +140,6 @@ final class GameAggregate extends AggregateRoot
 
   public function applyBluffWasCalled(BluffWasCalled $event): void
   {
-    if ($this->gameOver) {
-      throw new \Exception('Game is over');
-    }
-    if ($this->diceValues === null) {
-      throw new \Exception('Game not created');
-    }
-    if ($this->lastBidQuantity === null || $this->lastBidFace === null) {
-      throw new \Exception('Cannot call bluff before bid');
-    }
-
     $diceCount = 0;
     foreach ($this->diceValues as $player => $values) {
       $diceCount += count(array_filter($values, fn($value) => $value === $this->lastBidFace));
@@ -135,16 +154,6 @@ final class GameAggregate extends AggregateRoot
 
   public function applySpotOnWasCalled(SpotOnWasCalled $event): void
   {
-    if ($this->gameOver) {
-      throw new \Exception('Game is over');
-    }
-    if ($this->diceValues === null) {
-      throw new \Exception('Game not created');
-    }
-    if ($this->lastBidQuantity === null || $this->lastBidFace === null) {
-      throw new \Exception('Cannot call bluff before bid');
-    }
-
     $diceCount = 0;
     foreach ($this->diceValues as $player => $values) {
       $diceCount += count(array_filter($values, fn($value) => $value === $this->lastBidFace));
@@ -197,7 +206,8 @@ final class GameAggregate extends AggregateRoot
 
     $remainingPlayers = array_keys(array_filter($this->diceCount, function ($count, $player) {
       return $player !== $this->nextPlayer && $count > 0;
-    }));
+    }, ARRAY_FILTER_USE_BOTH));
+
     $index = array_search($this->nextPlayer, $remainingPlayers);
     if ($index < count($remainingPlayers) - 1) {
       $this->nextPlayer = $remainingPlayers[$index + 1];
@@ -213,5 +223,12 @@ final class GameAggregate extends AggregateRoot
       return false;
     }
     return true;
+  }
+
+  private function rerollDiceAndRecord(): void
+  {
+    $newDiceRoll = rollDicePerPlayer($this->diceCount);
+
+    $this->recordThat(new DiceWereRerolled($newDiceRoll));
   }
 }
