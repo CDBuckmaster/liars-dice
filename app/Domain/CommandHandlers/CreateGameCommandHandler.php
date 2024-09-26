@@ -13,20 +13,20 @@ class CreateGameCommandHandler
 
   public function __invoke(CreateGameCommand $command)
   {
-    $startingPlayer = $command->players[array_rand($command->players)];
+    $startingPlayer = $command->getPlayers()[array_rand($command->getPlayers())];
     $game = new Game();
-    $game->uuid = $command->gameUuid;
+    $game->uuid = $command->getGameUuid();
     $game->metadata = [
-      'players' => $command->players,
+      'players' => $command->getPlayers(),
       'starting_player' => $startingPlayer,
     ];
     $game->save();
 
-    $startingDice = rollDicePerPlayer(array_fill_keys($command->players, self::STARTING_DICE));
+    $startingDice = rollDicePerPlayer(array_fill_keys($command->getPlayers(), self::STARTING_DICE));
 
 
-    GameAggregate::retrieve($command->gameUuid)
-      ->createGame($command->players, $startingPlayer)
+    GameAggregate::retrieve($command->getGameUuid())
+      ->createGame($command->getPlayers(), $startingPlayer)
       ->rerollDice($startingDice)
       ->persist();
   }

@@ -2,18 +2,22 @@
 
 namespace App\Http\Requests;
 
+use App\Domain\Commands\PlayerActionCommandFactory;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Contracts\Validation\Validator;
 use Symfony\Component\HttpFoundation\Response;
 
-class CreateGameRequest extends FormRequest
+class CreatePlayerActionRequest extends FormRequest
 {
   public function rules(): array
   {
     return [
-      'players' => ['required', 'array', 'min:2', 'max:4'],
-      'players.*' => ['required', 'string'],
+      'action' => ['required', 'string', 'in:' . implode(',', PlayerActionCommandFactory::$actionTypes)],
+      'player' => ['required', 'string'],
+      'arguments' => ['array'],
+      'arguments.quantity' => ['integer', 'required_if:action,make_bid'],
+      'arguments.face' => ['integer', 'required_if:action,make_bid'],
     ];
   }
 

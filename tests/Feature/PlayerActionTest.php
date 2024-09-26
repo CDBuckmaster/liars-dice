@@ -17,10 +17,10 @@ class PlayerActionTest extends TestCase
     $this->seed(InitialGameStateSeeder::class);
 
     // Simulate a request to create a new game
-    $response = $this->post('/api/games/action', [
+    $response = $this->post('/api/games/actions', [
       'player' => 'Han',
       'game_uuid' => InitialGameStateSeeder::INITIAL_GAME['uuid'],
-      'action' => 'bid',
+      'action' => 'make_bid',
       'arguments' => [
         'face' => 3,
         'quantity' => 1,

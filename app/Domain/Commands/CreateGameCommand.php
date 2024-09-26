@@ -7,12 +7,25 @@ use Spatie\EventSourcing\Commands\HandledBy;
 use App\Domain\CommandHandlers\CreateGameCommandHandler;
 
 #[HandledBy(CreateGameCommandHandler::class)]
-class CreateGameCommand
+class CreateGameCommand implements CommandInterface
 {
-  public string $gameUuid;
+  protected string $gameUuid;
+  protected array $players;
+
   public function __construct(
-    public array $players,
+    array $players,
   ) {
+    $this->players = $players;
     $this->gameUuid = (string) Str::uuid();
+  }
+
+  public function getGameUuid(): string
+  {
+    return $this->gameUuid;
+  }
+
+  public function getPlayers(): array
+  {
+    return $this->players;
   }
 }

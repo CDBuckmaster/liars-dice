@@ -20,6 +20,7 @@ class InitialGameStateSeeder extends Seeder
     ],
     'completed_at' => null,
   ];
+
   /**
    * Seed the application's database.
    */
@@ -42,7 +43,12 @@ class InitialGameStateSeeder extends Seeder
           ],
           'starting_player' => 'Han',
         ]),
-        'meta_data' => json_encode([]),
+        'meta_data' => json_encode([
+          "created-at" => "2024-09-26T09:57:58.211270Z",
+          "stored-event-id" => 1,
+          "aggregate-root-uuid" => "37ffb296-3a81-4b98-ad07-07f79822436a",
+          "aggregate-root-version" => 1
+        ]),
         'created_at' => now(),
       ]
     );

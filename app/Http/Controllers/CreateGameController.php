@@ -15,7 +15,7 @@ final class CreateGameController extends Controller
     $this->bus->dispatch($command);
 
     return response()->json([
-      'uuid' => $command->gameUuid,
+      'uuid' => $command->getGameUuid(),
     ], 201);
   }
 }
