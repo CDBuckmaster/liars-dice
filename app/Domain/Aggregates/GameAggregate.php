@@ -26,7 +26,7 @@ final class GameAggregate extends AggregateRoot
   public function createGame(array $players, string $firstPlayer): self
   {
     if ($this->nextPlayer !== null) {
-      throw new \Exception('Game already created');
+      throw new GameException('Game already created');
     }
 
     $this->recordThat(new GameWasCreated($players, $firstPlayer));
@@ -42,9 +42,6 @@ final class GameAggregate extends AggregateRoot
     }
     if ($this->diceValues === null) {
       throw new GameException('Game not created');
-    }
-    if ($this->lastBidQuantity !== null) {
-      throw new GameException('Cannot reroll dice before bid');
     }
 
     $this->recordThat(new DiceWereRerolled($dice));
@@ -178,7 +175,7 @@ final class GameAggregate extends AggregateRoot
     }
 
     if ($diceCount == $this->lastBidQuantity) {
-      $this->allOtherPlayersLoseDice($this->lastPlayer);
+      $this->allOtherPlayersLoseDice($event->getPlayer());
     } else {
       $this->playerLosesDice($event->getPlayer());
     }
@@ -208,9 +205,9 @@ final class GameAggregate extends AggregateRoot
 
   private function allOtherPlayersLoseDice($player): void
   {
-    foreach ($this->diceCount as $player => $count) {
-      if ($player !== $this->lastPlayer && $count > 0) {
-        $this->diceCount[$player] -= 1;
+    foreach ($this->diceCount as $otherPlayer => $count) {
+      if ($otherPlayer !== $player && $count > 0) {
+        $this->diceCount[$otherPlayer] -= 1;
       }
     }
     if ($this->isGameOver()) {
