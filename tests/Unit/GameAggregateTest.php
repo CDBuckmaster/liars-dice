@@ -20,11 +20,11 @@ class GameAggregateTest extends TestCase
   {
 
     GameAggregate::fake()
-      ->when(fn(GameAggregate $game) => $game->createGame(['player-1'], 'player-1'))
+      ->when(fn(GameAggregate $game) => $game->createGame(['Han'], 'Han'))
       ->assertRecorded([
-        new GameWasCreated(['player-1'], 'player-1'),
+        new GameWasCreated(['Han'], 'Han'),
         new DiceWereRerolled([
-          'player-1' => [1, 1, 1, 1, 1],
+          'Han' => [1, 1, 1, 1, 1],
         ])
       ]);
   }
@@ -35,7 +35,7 @@ class GameAggregateTest extends TestCase
     $this->expectException(GameException::class);
 
     GameAggregate::fake()
-      ->when(fn(GameAggregate $game) => $game->rerollDice(['player-1' => [1, 1, 1, 1, 1]]))
+      ->when(fn(GameAggregate $game) => $game->rerollDice(['Han' => [1, 1, 1, 1, 1]]))
       ->assertNothingRecorded();
   }
 
@@ -45,8 +45,8 @@ class GameAggregateTest extends TestCase
     $this->expectException(GameException::class);
 
     GameAggregate::fake()
-      ->given(new GameWasCreated(['player-1'], 'player-1'))
-      ->when(fn(GameAggregate $game) => $game->createGame(['player-1'], 'player-1'))
+      ->given(new GameWasCreated(['Han'], 'Han'))
+      ->when(fn(GameAggregate $game) => $game->createGame(['Han'], 'Han'))
       ->assertNothingRecorded();
   }
 
@@ -56,8 +56,8 @@ class GameAggregateTest extends TestCase
     $this->expectException(GameException::class);
 
     GameAggregate::fake()
-      ->given(new GameWasCreated(['player-1'], 'player-1'))
-      ->when(fn(GameAggregate $game) => $game->playerCalledBluff('player-1'))
+      ->given(new GameWasCreated(['Han'], 'Han'))
+      ->when(fn(GameAggregate $game) => $game->playerCalledBluff('Han'))
       ->assertNothingRecorded();
   }
 
@@ -66,14 +66,14 @@ class GameAggregateTest extends TestCase
   {
     GameAggregate::fake()
       ->given([
-        new GameWasCreated(['player-1', 'player-2'], 'player-1'),
+        new GameWasCreated(['Han', 'Luke'], 'Han'),
         new DiceWereRerolled([
-          'player-1' => [1, 1, 1, 1, 1],
-          'player-2' => [1, 1, 1, 1, 1],
+          'Han' => [1, 1, 1, 1, 1],
+          'Luke' => [1, 1, 1, 1, 1],
         ])
       ])
-      ->when(fn(GameAggregate $game) => $game->playerMadeBid('player-1', 1, 1))
-      ->assertRecorded(new BidWasMade('player-1', 1, 1));
+      ->when(fn(GameAggregate $game) => $game->playerMadeBid('Han', 1, 1))
+      ->assertRecorded(new BidWasMade('Han', 1, 1));
   }
 
   #[Test]
@@ -83,13 +83,13 @@ class GameAggregateTest extends TestCase
 
     GameAggregate::fake()
       ->given([
-        new GameWasCreated(['player-1', 'player-2'], 'player-1'),
+        new GameWasCreated(['Han', 'Luke'], 'Han'),
         new DiceWereRerolled([
-          'player-1' => [1, 1, 1, 1, 1],
-          'player-2' => [1, 1, 1, 1, 1],
+          'Han' => [1, 1, 1, 1, 1],
+          'Luke' => [1, 1, 1, 1, 1],
         ])
       ])
-      ->when(fn(GameAggregate $game) => $game->playerMadeBid('player-2', 1, 1))
+      ->when(fn(GameAggregate $game) => $game->playerMadeBid('Luke', 1, 1))
       ->assertNothingRecorded();
   }
 
@@ -100,13 +100,13 @@ class GameAggregateTest extends TestCase
 
     GameAggregate::fake()
       ->given([
-        new GameWasCreated(['player-1', 'player-2'], 'player-1'),
+        new GameWasCreated(['Han', 'Luke'], 'Han'),
         new DiceWereRerolled([
-          'player-1' => [1, 1, 1, 1, 1],
-          'player-2' => [1, 1, 1, 1, 1],
+          'Han' => [1, 1, 1, 1, 1],
+          'Luke' => [1, 1, 1, 1, 1],
         ])
       ])
-      ->when(fn(GameAggregate $game) => $game->playerMadeBid('player-1', 0, 1))
+      ->when(fn(GameAggregate $game) => $game->playerMadeBid('Han', 0, 1))
       ->assertNothingRecorded();
   }
 
@@ -117,13 +117,13 @@ class GameAggregateTest extends TestCase
 
     GameAggregate::fake()
       ->given([
-        new GameWasCreated(['player-1', 'player-2'], 'player-1'),
+        new GameWasCreated(['Han', 'Luke'], 'Han'),
         new DiceWereRerolled([
-          'player-1' => [1, 1, 1, 1, 1],
-          'player-2' => [1, 1, 1, 1, 1],
+          'Han' => [1, 1, 1, 1, 1],
+          'Luke' => [1, 1, 1, 1, 1],
         ])
       ])
-      ->when(fn(GameAggregate $game) => $game->playerMadeBid('player-1', 11, 1))
+      ->when(fn(GameAggregate $game) => $game->playerMadeBid('Han', 11, 1))
       ->assertNothingRecorded();
   }
 
@@ -134,14 +134,14 @@ class GameAggregateTest extends TestCase
 
     GameAggregate::fake()
       ->given([
-        new GameWasCreated(['player-1', 'player-2'], 'player-1'),
+        new GameWasCreated(['Han', 'Luke'], 'Han'),
         new DiceWereRerolled([
-          'player-1' => [1, 1, 1, 1, 1],
-          'player-2' => [1, 1, 1, 1, 1],
+          'Han' => [1, 1, 1, 1, 1],
+          'Luke' => [1, 1, 1, 1, 1],
         ]),
-        new BidWasMade('player-1', 2, 1)
+        new BidWasMade('Han', 2, 1)
       ])
-      ->when(fn(GameAggregate $game) => $game->playerMadeBid('player-2', 1, 1))
+      ->when(fn(GameAggregate $game) => $game->playerMadeBid('Luke', 1, 1))
       ->assertNothingRecorded();
   }
 
@@ -152,14 +152,14 @@ class GameAggregateTest extends TestCase
 
     GameAggregate::fake()
       ->given([
-        new GameWasCreated(['player-1', 'player-2'], 'player-1'),
+        new GameWasCreated(['Han', 'Luke'], 'Han'),
         new DiceWereRerolled([
-          'player-1' => [1, 1, 1, 1, 1],
-          'player-2' => [1, 1, 1, 1, 1],
+          'Han' => [1, 1, 1, 1, 1],
+          'Luke' => [1, 1, 1, 1, 1],
         ]),
-        new BidWasMade('player-1', 2, 1)
+        new BidWasMade('Han', 2, 1)
       ])
-      ->when(fn(GameAggregate $game) => $game->playerMadeBid('player-2', 2, 1))
+      ->when(fn(GameAggregate $game) => $game->playerMadeBid('Luke', 2, 1))
       ->assertNothingRecorded();
   }
 
@@ -168,19 +168,19 @@ class GameAggregateTest extends TestCase
   {
     GameAggregate::fake()
       ->given([
-        new GameWasCreated(['player-1', 'player-2'], 'player-1'),
+        new GameWasCreated(['Han', 'Luke'], 'Han'),
         new DiceWereRerolled([
-          'player-1' => [1, 1, 1, 1, 1],
-          'player-2' => [1, 1, 1, 1, 1],
+          'Han' => [1, 1, 1, 1, 1],
+          'Luke' => [1, 1, 1, 1, 1],
         ]),
-        new BidWasMade('player-1', 1, 2)
+        new BidWasMade('Han', 1, 2)
       ])
-      ->when(fn(GameAggregate $game) => $game->playerCalledBluff('player-2'))
+      ->when(fn(GameAggregate $game) => $game->playerCalledBluff('Luke'))
       ->assertRecorded([
-        new BluffWasCalled('player-2'),
+        new BluffWasCalled('Luke'),
         new DiceWereRerolled([
-          'player-1' => [1, 1, 1, 1],
-          'player-2' => [1, 1, 1, 1, 1],
+          'Han' => [1, 1, 1, 1],
+          'Luke' => [1, 1, 1, 1, 1],
         ])
       ]);
   }
@@ -190,19 +190,19 @@ class GameAggregateTest extends TestCase
   {
     GameAggregate::fake()
       ->given([
-        new GameWasCreated(['player-1', 'player-2'], 'player-1'),
+        new GameWasCreated(['Han', 'Luke'], 'Han'),
         new DiceWereRerolled([
-          'player-1' => [1, 1, 1, 1, 1],
-          'player-2' => [1, 1, 1, 1, 1],
+          'Han' => [1, 1, 1, 1, 1],
+          'Luke' => [1, 1, 1, 1, 1],
         ]),
-        new BidWasMade('player-1', 1, 1)
+        new BidWasMade('Han', 1, 1)
       ])
-      ->when(fn(GameAggregate $game) => $game->playerCalledBluff('player-2'))
+      ->when(fn(GameAggregate $game) => $game->playerCalledBluff('Luke'))
       ->assertRecorded([
-        new BluffWasCalled('player-2'),
+        new BluffWasCalled('Luke'),
         new DiceWereRerolled([
-          'player-1' => [1, 1, 1, 1, 1],
-          'player-2' => [1, 1, 1, 1],
+          'Han' => [1, 1, 1, 1, 1],
+          'Luke' => [1, 1, 1, 1],
         ])
       ]);
   }
@@ -212,21 +212,21 @@ class GameAggregateTest extends TestCase
   {
     GameAggregate::fake()
       ->given([
-        new GameWasCreated(['player-1', 'player-2', 'player-3'], 'player-1'),
+        new GameWasCreated(['Han', 'Luke', 'Leia'], 'Han'),
         new DiceWereRerolled([
-          'player-1' => [1, 1, 1, 1, 1],
-          'player-2' => [1, 1, 1, 1, 1],
-          'player-3' => [1, 1, 1, 1, 1],
+          'Han' => [1, 1, 1, 1, 1],
+          'Luke' => [1, 1, 1, 1, 1],
+          'Leia' => [1, 1, 1, 1, 1],
         ]),
-        new BidWasMade('player-1', 15, 1)
+        new BidWasMade('Han', 15, 1)
       ])
-      ->when(fn(GameAggregate $game) => $game->playerCalledSpotOn('player-2'))
+      ->when(fn(GameAggregate $game) => $game->playerCalledSpotOn('Luke'))
       ->assertRecorded([
-        new SpotOnWasCalled('player-2'),
+        new SpotOnWasCalled('Luke'),
         new DiceWereRerolled([
-          'player-1' => [1, 1, 1, 1],
-          'player-2' => [1, 1, 1, 1, 1],
-          'player-3' => [1, 1, 1, 1],
+          'Han' => [1, 1, 1, 1],
+          'Luke' => [1, 1, 1, 1, 1],
+          'Leia' => [1, 1, 1, 1],
         ])
       ]);
   }
@@ -236,21 +236,21 @@ class GameAggregateTest extends TestCase
   {
     GameAggregate::fake()
       ->given([
-        new GameWasCreated(['player-1', 'player-2', 'player-3'], 'player-1'),
+        new GameWasCreated(['Han', 'Luke', 'Leia'], 'Han'),
         new DiceWereRerolled([
-          'player-1' => [1, 1, 1, 1, 1],
-          'player-2' => [1, 1, 1, 1, 1],
-          'player-3' => [1, 1, 1, 1, 1],
+          'Han' => [1, 1, 1, 1, 1],
+          'Luke' => [1, 1, 1, 1, 1],
+          'Leia' => [1, 1, 1, 1, 1],
         ]),
-        new BidWasMade('player-1', 14, 1)
+        new BidWasMade('Han', 14, 1)
       ])
-      ->when(fn(GameAggregate $game) => $game->playerCalledSpotOn('player-2'))
+      ->when(fn(GameAggregate $game) => $game->playerCalledSpotOn('Luke'))
       ->assertRecorded([
-        new SpotOnWasCalled('player-2'),
+        new SpotOnWasCalled('Luke'),
         new DiceWereRerolled([
-          'player-1' => [1, 1, 1, 1, 1],
-          'player-2' => [1, 1, 1, 1],
-          'player-3' => [1, 1, 1, 1, 1],
+          'Han' => [1, 1, 1, 1, 1],
+          'Luke' => [1, 1, 1, 1],
+          'Leia' => [1, 1, 1, 1, 1],
         ])
       ]);
   }
@@ -260,41 +260,41 @@ class GameAggregateTest extends TestCase
   {
     GameAggregate::fake()
       ->given([
-        new GameWasCreated(['player-1', 'player-2'], 'player-1'),
+        new GameWasCreated(['Han', 'Luke'], 'Han'),
         new DiceWereRerolled([
-          'player-1' => [1, 1, 1, 1, 1],
-          'player-2' => [1, 1, 1, 1, 1],
+          'Han' => [1, 1, 1, 1, 1],
+          'Luke' => [1, 1, 1, 1, 1],
         ]),
-        new BidWasMade('player-1', 1, 2),
-        new BluffWasCalled('player-2'),
+        new BidWasMade('Han', 1, 2),
+        new BluffWasCalled('Luke'),
         new DiceWereRerolled([
-          'player-1' => [1, 1, 1, 1],
-          'player-2' => [1, 1, 1, 1, 1],
+          'Han' => [1, 1, 1, 1],
+          'Luke' => [1, 1, 1, 1, 1],
         ]),
-        new BidWasMade('player-1', 1, 2),
-        new BluffWasCalled('player-2'),
+        new BidWasMade('Han', 1, 2),
+        new BluffWasCalled('Luke'),
         new DiceWereRerolled([
-          'player-1' => [1, 1, 1],
-          'player-2' => [1, 1, 1, 1, 1],
+          'Han' => [1, 1, 1],
+          'Luke' => [1, 1, 1, 1, 1],
         ]),
-        new BidWasMade('player-1', 1, 2),
-        new BluffWasCalled('player-2'),
+        new BidWasMade('Han', 1, 2),
+        new BluffWasCalled('Luke'),
         new DiceWereRerolled([
-          'player-1' => [1, 1],
-          'player-2' => [1, 1, 1, 1, 1],
+          'Han' => [1, 1],
+          'Luke' => [1, 1, 1, 1, 1],
         ]),
-        new BidWasMade('player-1', 1, 2),
-        new BluffWasCalled('player-2'),
+        new BidWasMade('Han', 1, 2),
+        new BluffWasCalled('Luke'),
         new DiceWereRerolled([
-          'player-1' => [1],
-          'player-2' => [1, 1, 1, 1, 1],
+          'Han' => [1],
+          'Luke' => [1, 1, 1, 1, 1],
         ]),
-        new BidWasMade('player-1', 1, 2),
+        new BidWasMade('Han', 1, 2),
       ])
-      ->when(fn(GameAggregate $game) => $game->playerCalledBluff('player-2'))
+      ->when(fn(GameAggregate $game) => $game->playerCalledBluff('Luke'))
       ->assertRecorded([
-        new BluffWasCalled('player-2'),
-        new GameEnded('player-2'),
+        new BluffWasCalled('Luke'),
+        new GameEnded('Luke'),
       ]);
   }
 }
