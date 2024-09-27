@@ -14,7 +14,7 @@ final class PlayerActionCommandFactory
     self::MAKE_BID_ACTION_TYPE,
   ];
 
-  public static function create(string $actionType, string $gameUuid, string $playerName, array $arguments = []): PlayerActionCommand
+  public static function create(string $gameUuid, string $actionType, string $playerName, array $arguments = []): PlayerActionCommand
   {
     switch ($actionType) {
       case 'call_bluff':

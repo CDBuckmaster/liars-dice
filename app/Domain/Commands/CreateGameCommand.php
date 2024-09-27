@@ -4,7 +4,7 @@ namespace App\Domain\Commands;
 
 use Illuminate\Support\Str;
 use Spatie\EventSourcing\Commands\HandledBy;
-use App\Domain\CommandHandlers\CreateGameCommandHandler;
+use App\Domain\Handlers\Commands\CreateGameCommandHandler;
 
 #[HandledBy(CreateGameCommandHandler::class)]
 final class CreateGameCommand implements CommandInterface

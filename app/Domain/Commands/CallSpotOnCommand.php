@@ -3,7 +3,7 @@
 namespace App\Domain\Commands;
 
 use Spatie\EventSourcing\Commands\HandledBy;
-use App\Domain\CommandHandlers\CallSpotOnCommandHandler;
+use App\Domain\Handlers\Commands\CallSpotOnCommandHandler;
 
 #[HandledBy(CallSpotOnCommandHandler::class)]
 final class CallSpotOnCommand extends PlayerActionCommand implements CommandInterface

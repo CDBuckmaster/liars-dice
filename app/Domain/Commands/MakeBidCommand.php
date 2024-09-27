@@ -3,7 +3,7 @@
 namespace App\Domain\Commands;
 
 use Spatie\EventSourcing\Commands\HandledBy;
-use App\Domain\CommandHandlers\MakeBidCommandHandler;
+use App\Domain\Handlers\Commands\MakeBidCommandHandler;
 
 #[HandledBy(MakeBidCommandHandler::class)]
 final class MakeBidCommand extends PlayerActionCommand implements CommandInterface

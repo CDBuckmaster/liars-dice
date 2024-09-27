@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domain\CommandHandlers;
+namespace App\Domain\Handlers\Commands;
 
 use App\Domain\Aggregates\GameAggregate;
 use App\Domain\Commands\MakeBidCommand;

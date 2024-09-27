@@ -3,7 +3,7 @@
 namespace App\Domain\Commands;
 
 use Spatie\EventSourcing\Commands\HandledBy;
-use App\Domain\CommandHandlers\CallBluffCommandHandler;
+use App\Domain\Handlers\Commands\CallBluffCommandHandler;
 
 #[HandledBy(CallBluffCommandHandler::class)]
 final class CallBluffCommand extends PlayerActionCommand implements CommandInterface
