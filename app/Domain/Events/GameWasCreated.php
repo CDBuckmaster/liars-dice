@@ -7,7 +7,17 @@ use Spatie\EventSourcing\StoredEvents\ShouldBeStored;
 class GameWasCreated extends ShouldBeStored
 {
   public function __construct(
-    public array $players,
-    public string $firstPlayer,
+    private array $players,
+    private string $firstPlayer,
   ) {}
+
+  public function getPlayers(): array
+  {
+    return $this->players;
+  }
+
+  public function getFirstPlayer(): string
+  {
+    return $this->firstPlayer;
+  }
 }

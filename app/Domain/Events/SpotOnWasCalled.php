@@ -7,6 +7,11 @@ use Spatie\EventSourcing\StoredEvents\ShouldBeStored;
 class SpotOnWasCalled extends ShouldBeStored
 {
   public function __construct(
-    public string $player,
+    private string $player,
   ) {}
+
+  public function getPlayer(): string
+  {
+    return $this->player;
+  }
 }

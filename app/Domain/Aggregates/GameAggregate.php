@@ -8,7 +8,9 @@ use App\Domain\Events\DiceWereRerolled;
 use App\Domain\Events\BidWasMade;
 use App\Domain\Events\BluffWasCalled;
 use App\Domain\Events\SpotOnWasCalled;
+use App\Domain\Events\GameEnded;
 use App\Domain\Exceptions\GameException;
+use App\Models\Game;
 
 final class GameAggregate extends AggregateRoot
 {
@@ -19,6 +21,7 @@ final class GameAggregate extends AggregateRoot
   private ?array $diceValues = null;
   private ?array $diceCount = null;
   private bool $gameOver = false;
+  private ?string $winner = null;
 
   public function createGame(array $players, string $firstPlayer): self
   {
@@ -95,7 +98,7 @@ final class GameAggregate extends AggregateRoot
     }
 
     $this->recordThat(new BluffWasCalled($player));
-    $this->rerollDiceAndRecord();
+    $this->recordGameOverOrContinue();
 
     return $this;
   }
@@ -113,7 +116,21 @@ final class GameAggregate extends AggregateRoot
     }
 
     $this->recordThat(new SpotOnWasCalled($player));
-    $this->rerollDiceAndRecord();
+    $this->recordGameOverOrContinue();
+
+    return $this;
+  }
+
+  public function gameEnded(string $player): self
+  {
+    if (!$this->gameOver) {
+      throw new GameException('Game is not over');
+    }
+    if ($this->diceValues === null) {
+      throw new GameException('Game not created');
+    }
+
+    $this->recordThat(new GameEnded($player));
 
     return $this;
   }
@@ -121,20 +138,20 @@ final class GameAggregate extends AggregateRoot
   public function applyGameWasCreated(GameWasCreated $event): void
   {
 
-    $this->nextPlayer = $event->firstPlayer;
-    $this->diceValues = array_fill_keys($event->players, []);
-    $this->diceCount = array_fill_keys($event->players, 5);
+    $this->nextPlayer = $event->getFirstPlayer();
+    $this->diceValues = array_fill_keys($event->getPlayers(), []);
+    $this->diceCount = array_fill_keys($event->getPlayers(), 5);
   }
 
   public function applyDiceWereRerolled(DiceWereRerolled $event): void
   {
-    $this->diceValues = $event->dice;
+    $this->diceValues = $event->getDice();
   }
 
   public function applyBidWasMade(BidWasMade $event): void
   {
-    $this->lastBidQuantity = $event->quantity;
-    $this->lastBidFace = $event->face;
+    $this->lastBidQuantity = $event->getQuantity();
+    $this->lastBidFace = $event->getFace();
     $this->goToNextPlayer();
   }
 
@@ -148,7 +165,7 @@ final class GameAggregate extends AggregateRoot
     if ($diceCount < $this->lastBidQuantity) {
       $this->playerLosesDice($this->lastPlayer);
     } else {
-      $this->playerLosesDice($event->player);
+      $this->playerLosesDice($event->getPlayer());
     }
   }
 
@@ -162,15 +179,20 @@ final class GameAggregate extends AggregateRoot
     if ($diceCount == $this->lastBidQuantity) {
       $this->allOtherPlayersLoseDice($this->lastPlayer);
     } else {
-      $this->playerLosesDice($event->player);
+      $this->playerLosesDice($event->getPlayer());
     }
+  }
+
+  public function applyGameEnded(GameEnded $event): void
+  {
+    $this->winner = $event->getWinner();
   }
 
   private function playerLosesDice($player): void
   {
     $this->diceCount[$player] -= 1;
     if ($this->isGameOver()) {
-      $this->gameOver = true;
+      $this->endGame();
     } else {
       if ($this->diceCount[$player] > 0) {
         $this->nextPlayer = $player;
@@ -191,7 +213,7 @@ final class GameAggregate extends AggregateRoot
       }
     }
     if ($this->isGameOver()) {
-      $this->gameOver = true;
+      $this->endGame();
     } else {
       $this->goToNextPlayer();
     }
@@ -230,5 +252,21 @@ final class GameAggregate extends AggregateRoot
     $newDiceRoll = rollDicePerPlayer($this->diceCount);
 
     $this->recordThat(new DiceWereRerolled($newDiceRoll));
+  }
+
+  private function endGame(): void
+  {
+    $this->gameOver = true;
+    Game::where('uuid', $this->uuid())->update(['completed_at' => now()]);
+  }
+
+  private function recordGameOverOrContinue(): void
+  {
+    if ($this->isGameOver()) {
+      $winner = array_keys(array_filter($this->diceCount, fn($count) => $count > 0))[0];
+      $this->recordThat(new GameEnded($winner));
+    } else {
+      $this->rerollDiceAndRecord();
+    }
   }
 }
