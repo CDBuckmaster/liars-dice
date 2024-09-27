@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use Tests\TestCase;
 use App\Domain\Aggregates\GameAggregate;
+use App\Domain\Events\BecamePlayersTurn;
 use App\Domain\Events\DiceWereRerolled;
 use App\Domain\Events\GameWasCreated;
 use App\Domain\Events\BidWasMade;
@@ -73,7 +74,10 @@ class GameAggregateTest extends TestCase
         ])
       ])
       ->when(fn(GameAggregate $game) => $game->playerMadeBid('Han', 1, 1))
-      ->assertRecorded(new BidWasMade('Han', 1, 1));
+      ->assertRecorded([
+        new BidWasMade('Han', 1, 1),
+        new BecamePlayersTurn('Luke')
+      ]);
   }
 
   #[Test]
@@ -181,7 +185,8 @@ class GameAggregateTest extends TestCase
         new DiceWereRerolled([
           'Han' => [1, 1, 1, 1],
           'Luke' => [1, 1, 1, 1, 1],
-        ])
+        ]),
+        new BecamePlayersTurn('Han')
       ]);
   }
 
@@ -203,7 +208,8 @@ class GameAggregateTest extends TestCase
         new DiceWereRerolled([
           'Han' => [1, 1, 1, 1, 1],
           'Luke' => [1, 1, 1, 1],
-        ])
+        ]),
+        new BecamePlayersTurn('Luke')
       ]);
   }
 
@@ -227,7 +233,8 @@ class GameAggregateTest extends TestCase
           'Han' => [1, 1, 1, 1],
           'Luke' => [1, 1, 1, 1, 1],
           'Leia' => [1, 1, 1, 1],
-        ])
+        ]),
+        new BecamePlayersTurn('Leia')
       ]);
   }
 
@@ -251,7 +258,8 @@ class GameAggregateTest extends TestCase
           'Han' => [1, 1, 1, 1, 1],
           'Luke' => [1, 1, 1, 1],
           'Leia' => [1, 1, 1, 1, 1],
-        ])
+        ]),
+        new BecamePlayersTurn('Luke')
       ]);
   }
 

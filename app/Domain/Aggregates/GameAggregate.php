@@ -2,6 +2,7 @@
 
 namespace App\Domain\Aggregates;
 
+use App\Domain\Events\BecamePlayersTurn;
 use Spatie\EventSourcing\AggregateRoots\AggregateRoot;
 use App\Domain\Events\GameWasCreated;
 use App\Domain\Events\DiceWereRerolled;
@@ -11,6 +12,7 @@ use App\Domain\Events\SpotOnWasCalled;
 use App\Domain\Events\GameEnded;
 use App\Domain\Exceptions\GameException;
 use App\Models\Game;
+use Exception;
 
 final class GameAggregate extends AggregateRoot
 {
@@ -107,6 +109,7 @@ final class GameAggregate extends AggregateRoot
     }
 
     $this->recordThat(new BidWasMade($player, $quantity, $face));
+    $this->recordThat(new BecamePlayersTurn($this->nextPlayer));
 
     return $this;
   }
@@ -219,6 +222,7 @@ final class GameAggregate extends AggregateRoot
       $this->recordThat(new GameEnded($winner));
     } else {
       $this->rerollDiceAndRecord();
+      $this->recordThat(new BecamePlayersTurn($this->nextPlayer));
     }
   }
 
@@ -368,16 +372,20 @@ final class GameAggregate extends AggregateRoot
   {
     $this->lastPlayer = $this->nextPlayer;
 
-    $remainingPlayers = array_keys(array_filter($this->diceCount, function ($count, $player) {
-      return $player !== $this->nextPlayer && $count > 0;
-    }, ARRAY_FILTER_USE_BOTH));
+    $playerKeys = array_keys($this->diceCount);
+    $currentPlayerIndex = array_search($this->nextPlayer, $playerKeys);
+    $head = array_slice($playerKeys, $currentPlayerIndex + 1);
+    $tail = array_slice($playerKeys, 0, $currentPlayerIndex);
+    $players = array_merge($head, $tail);
 
-    $index = array_search($this->nextPlayer, $remainingPlayers);
-    if ($index < count($remainingPlayers) - 1) {
-      $this->nextPlayer = $remainingPlayers[$index + 1];
-    } else {
-      $this->nextPlayer = $remainingPlayers[0];
+    foreach ($players as $player) {
+      if ($this->diceCount[$player] > 0) {
+        $this->nextPlayer = $player;
+        return;
+      }
     }
+
+    throw new Exception('No next player found');
   }
 
   /**
