@@ -23,6 +23,18 @@ final class GameAggregate extends AggregateRoot
   private bool $gameOver = false;
   private ?string $winner = null;
 
+  ///
+  /// Record new events
+  ///
+
+  /**
+   * Creates a new game with the specified players and sets the first player.
+   *
+   * @param array $players An array of players participating in the game.
+   * @param string $firstPlayer The name or identifier of the first player.
+   * @return self Returns the instance of the GameAggregate with the new game created.
+   */
+
   public function createGame(array $players, string $firstPlayer): self
   {
     if ($this->nextPlayer !== null) {
@@ -35,6 +47,12 @@ final class GameAggregate extends AggregateRoot
     return $this;
   }
 
+  /**
+   * Rerolls the dice for the specified players.
+   *
+   * @param array $dice An array of dice values for each player.
+   * @return self Returns the instance of the GameAggregate with the dice rerolled.
+   */
   public function rerollDice(array $dice): self
   {
     if ($this->gameOver) {
@@ -49,6 +67,14 @@ final class GameAggregate extends AggregateRoot
     return $this;
   }
 
+  /**
+   * Makes a bid for the specified player.
+   *
+   * @param string $player The name or identifier of the player making the bid.
+   * @param int $quantity The quantity of dice the player is bidding.
+   * @param int $face The face value of the dice the player is bidding.
+   * @return self Returns the instance of the GameAggregate with the bid made.
+   */
   public function playerMadeBid(string $player, int $quantity, int $face): self
   {
     if ($this->gameOver) {
@@ -83,6 +109,12 @@ final class GameAggregate extends AggregateRoot
     return $this;
   }
 
+  /**
+   * Calls bluff on the last bid made.
+   *
+   * @param string $player The name or identifier of the player calling bluff.
+   * @return self Returns the instance of the GameAggregate with the bluff called.
+   */
   public function playerCalledBluff(string $player): self
   {
     if ($this->gameOver) {
@@ -101,6 +133,12 @@ final class GameAggregate extends AggregateRoot
     return $this;
   }
 
+  /**
+   * Calls spot on on the last bid made.
+   *
+   * @param string $player The name or identifier of the player calling spot on.
+   * @return self Returns the instance of the GameAggregate with the spot on called.
+   */
   public function playerCalledSpotOn(string $player): self
   {
     if ($this->gameOver) {
@@ -119,6 +157,12 @@ final class GameAggregate extends AggregateRoot
     return $this;
   }
 
+  /**
+   * Ends the game and declares the winner.
+   *
+   * @param string $player The name or identifier of the winning player.
+   * @return self Returns the instance of the GameAggregate with the game ended.
+   */
   public function gameEnded(string $player): self
   {
     if (!$this->gameOver) {
@@ -133,6 +177,60 @@ final class GameAggregate extends AggregateRoot
     return $this;
   }
 
+  /**
+   * Rerolls the dice for players and records the event.
+   *
+   * @return void
+   */
+  private function rerollDiceAndRecord(): void
+  {
+    $newDiceRoll = $this->rollDicePerPlayer($this->diceCount);
+    $this->recordThat(new DiceWereRerolled($newDiceRoll));
+  }
+
+  /**
+   * Rolls the dice for each player.
+   *
+   * @param array $players An array of players and the number of dice they have.
+   * @return array Returns an array of dice rolls for each player.
+   */
+  private function rollDicePerPlayer(array $players): array
+  {
+    $rolls = [];
+    foreach ($players as $player => $diceRemaining) {
+      for ($i = 0; $i < $diceRemaining; $i++) {
+        $rolls[$player][] = random_int(1, 6);
+      }
+    }
+    return $rolls;
+  }
+
+  /**
+   * Records the game over event if the game is over, otherwise rerolls the dice and records the event.
+   *
+   * @return void
+   */
+  private function recordGameOverOrContinue(): void
+  {
+    if ($this->isGameOver()) {
+      $winner = array_keys(array_filter($this->diceCount, fn($count) => $count > 0))[0];
+      $this->recordThat(new GameEnded($winner));
+    } else {
+      $this->rerollDiceAndRecord();
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  ///                                                                        ///
+  /// Retrieve recorded events and apply them to the aggregate state         ///
+  ///                                                                        ///
+  //////////////////////////////////////////////////////////////////////////////
+
+  /**
+   * Applies the GameWasCreated event to the aggregate state.
+   *
+   * @param GameWasCreated $event The event to apply.
+   */
   public function applyGameWasCreated(GameWasCreated $event): void
   {
 
@@ -141,11 +239,21 @@ final class GameAggregate extends AggregateRoot
     $this->diceCount = array_fill_keys($event->getPlayers(), 5);
   }
 
+  /**
+   * Applies the DiceWereRerolled event to the aggregate state.
+   *
+   * @param DiceWereRerolled $event The event to apply.
+   */
   public function applyDiceWereRerolled(DiceWereRerolled $event): void
   {
     $this->diceValues = $event->getDice();
   }
 
+  /**
+   * Applies the BidWasMade event to the aggregate state.
+   *
+   * @param BidWasMade $event The event to apply.
+   */
   public function applyBidWasMade(BidWasMade $event): void
   {
     $this->lastBidQuantity = $event->getQuantity();
@@ -153,6 +261,11 @@ final class GameAggregate extends AggregateRoot
     $this->goToNextPlayer();
   }
 
+  /**
+   * Applies the BluffWasCalled event to the aggregate state.
+   *
+   * @param BluffWasCalled $event The event to apply.
+   */
   public function applyBluffWasCalled(BluffWasCalled $event): void
   {
     $diceCount = 0;
@@ -167,6 +280,11 @@ final class GameAggregate extends AggregateRoot
     }
   }
 
+  /**
+   * Applies the SpotOnWasCalled event to the aggregate state.
+   *
+   * @param SpotOnWasCalled $event The event to apply.
+   */
   public function applySpotOnWasCalled(SpotOnWasCalled $event): void
   {
     $diceCount = 0;
@@ -181,11 +299,23 @@ final class GameAggregate extends AggregateRoot
     }
   }
 
+  /**
+   * Applies the GameEnded event to the aggregate state.
+   *
+   * @param GameEnded $event The event to apply.
+   */
   public function applyGameEnded(GameEnded $event): void
   {
     $this->winner = $event->getWinner();
   }
 
+  /**
+   * Handles the logic for when a player loses a dice.
+   *
+   * @param Player $player The player who loses a dice.
+   *
+   * @return void
+   */
   private function playerLosesDice($player): void
   {
     $this->diceCount[$player] -= 1;
@@ -203,6 +333,13 @@ final class GameAggregate extends AggregateRoot
     $this->lastBidFace = null;
   }
 
+  /**
+   * Handles the logic for when all other players lose a dice.
+   *
+   * @param Player $player The player who called spot on.
+   *
+   * @return void
+   */
   private function allOtherPlayersLoseDice($player): void
   {
     foreach ($this->diceCount as $otherPlayer => $count) {
@@ -220,6 +357,11 @@ final class GameAggregate extends AggregateRoot
     $this->lastBidFace = null;
   }
 
+  /**
+   * Handles the logic for moving to the next player.
+   *
+   * @return void
+   */
   private function goToNextPlayer(): void
   {
     $this->lastPlayer = $this->nextPlayer;
@@ -236,6 +378,11 @@ final class GameAggregate extends AggregateRoot
     }
   }
 
+  /**
+   * Checks if the game is over.
+   *
+   * @return bool Returns true if the game is over, false otherwise.
+   */
   private function isGameOver(): bool
   {
     $remainingPlayers = array_filter($this->diceCount, fn($count) => $count > 0);
@@ -245,36 +392,14 @@ final class GameAggregate extends AggregateRoot
     return true;
   }
 
-  private function rerollDiceAndRecord(): void
-  {
-    $newDiceRoll = $this->rollDicePerPlayer($this->diceCount);
-    $this->recordThat(new DiceWereRerolled($newDiceRoll));
-  }
-
+  /**
+   * Ends the game and updates the Game record.
+   *
+   * @return void
+   */
   private function endGame(): void
   {
     $this->gameOver = true;
     Game::where('uuid', $this->uuid())->update(['completed_at' => now()]);
-  }
-
-  private function recordGameOverOrContinue(): void
-  {
-    if ($this->isGameOver()) {
-      $winner = array_keys(array_filter($this->diceCount, fn($count) => $count > 0))[0];
-      $this->recordThat(new GameEnded($winner));
-    } else {
-      $this->rerollDiceAndRecord();
-    }
-  }
-
-  private function rollDicePerPlayer(array $players): array
-  {
-    $rolls = [];
-    foreach ($players as $player => $diceRemaining) {
-      for ($i = 0; $i < $diceRemaining; $i++) {
-        $rolls[$player][] = random_int(1, 6);
-      }
-    }
-    return $rolls;
   }
 }
