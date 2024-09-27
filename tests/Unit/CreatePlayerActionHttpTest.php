@@ -6,7 +6,7 @@ use Tests\TestCase;
 use Mockery\MockInterface;
 use PHPUnit\Framework\Attributes\Test;
 
-class GameCreateHttpTest extends TestCase
+class CreatePlayerActionHttpTest extends TestCase
 {
   public function tearDown(): void
   {
@@ -15,36 +15,42 @@ class GameCreateHttpTest extends TestCase
   }
 
   #[Test]
-  public function it_creates_a_game_on_submission()
+  public function it_can_create_player_actions()
   {
     $this->mock(\Spatie\EventSourcing\Commands\CommandBus::class, function (MockInterface $mock) {
       $mock->shouldReceive('dispatch')->once();
     });
 
     // Simulate a request to create a new game
-    $response = $this->post('/api/games', [
-      'players' => [
-        'Han',
-        'Luke',
-      ],
+    $response = $this->post('/api/games/actions', [
+      'player' => 'Han',
+      'game_uuid' => '37ffb296-3a81-4b98-ad07-07f79822436a',
+      'action' => 'make_bid',
+      'arguments' => [
+        'quantity' => 2,
+        'face' => 4,
+      ]
     ]);
 
     // Assert that the response status is 201 (Created)
-    $response->assertStatus(201);
+    $response->assertJson(["uuid" => "37ffb296-3a81-4b98-ad07-07f79822436a"]);
   }
 
   #[Test]
-  public function it_requires_at_least_two_players()
+  public function it_requires_quantity_for_bid_actions()
   {
     $this->mock(\Spatie\EventSourcing\Commands\CommandBus::class, function (MockInterface $mock) {
       $mock->shouldNotReceive('dispatch');
     });
 
-    // Simulate a request to create a new game with only one player
-    $response = $this->post('/api/games', [
-      'players' => [
-        'Han',
-      ],
+    // Simulate a request to create a new game
+    $response = $this->post('/api/games/actions', [
+      'player' => 'Han',
+      'game_uuid' => '37ffb296-3a81-4b98-ad07-07f79822436a',
+      'action' => 'make_bid',
+      'arguments' => [
+        'face' => 4,
+      ]
     ]);
 
     // Assert that the response status is 422 (Unprocessable Entity)
@@ -52,21 +58,17 @@ class GameCreateHttpTest extends TestCase
   }
 
   #[Test]
-  public function it_requires_a_maximum_of_four_players()
+  public function it_requires_valid_action_type()
   {
     $this->mock(\Spatie\EventSourcing\Commands\CommandBus::class, function (MockInterface $mock) {
       $mock->shouldNotReceive('dispatch');
     });
 
-    // Simulate a request to create a new game with five players
-    $response = $this->post('/api/games', [
-      'players' => [
-        'Han',
-        'Luke',
-        'Leia',
-        'Chewbacca',
-        'R2-D2',
-      ],
+    // Simulate a request to create a new game
+    $response = $this->post('/api/games/actions', [
+      'player' => 'Han',
+      'game_uuid' => '37ffb296-3a81-4b98-ad07-07f79822436a',
+      'action' => 'nonsense',
     ]);
 
     // Assert that the response status is 422 (Unprocessable Entity)
