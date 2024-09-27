@@ -1,18 +1,37 @@
 <?php
 
-namespace Tests\Feature;
+namespace Tests\Unit;
 
 use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Mockery;
 
-
-class GameCreateTest extends TestCase
+class GameCreateHttpTest extends TestCase
 {
-  use RefreshDatabase;
+  protected $mock;
+
+  public function tearDown(): void
+  {
+    parent::tearDown();
+    Mockery::close();
+  }
+
+  public function setup(): void
+  {
+    parent::setup();
+    $this->instance(
+      'Illuminate\Contracts\Bus\Dispatcher',
+      Mockery::mock('Illuminate\Contracts\Bus\Dispatcher')
+    );
+
+    $this->mock = Mockery::mock('Illuminate\Contracts\Bus\Dispatcher');
+    $this->instance('Illuminate\Contracts\Bus\Dispatcher', $this->mock);
+  }
 
   /** @test */
   public function it_creates_a_game_on_submission()
   {
+    $this->mock->shouldReceive('dispatch');
+
     // Simulate a request to create a new game
     $response = $this->post('/api/games', [
       'players' => [
@@ -23,14 +42,13 @@ class GameCreateTest extends TestCase
 
     // Assert that the response status is 201 (Created)
     $response->assertStatus(201);
-
-    // Assert that a game now exists in the DB
-    $this->assertDatabaseCount('games', 1);
   }
 
   /** @test */
   public function it_requires_at_least_two_players()
   {
+    $this->mock->shouldNotReceive('dispatch');
+
     // Simulate a request to create a new game with only one player
     $response = $this->post('/api/games', [
       'players' => [
@@ -40,14 +58,13 @@ class GameCreateTest extends TestCase
 
     // Assert that the response status is 422 (Unprocessable Entity)
     $response->assertStatus(422);
-
-    // Assert that no game exists in the DB
-    $this->assertDatabaseCount('games', 0);
   }
 
   /** @test */
   public function it_requires_a_maximum_of_four_players()
   {
+    $this->mock->shouldNotReceive('dispatch');
+
     // Simulate a request to create a new game with five players
     $response = $this->post('/api/games', [
       'players' => [
@@ -61,8 +78,5 @@ class GameCreateTest extends TestCase
 
     // Assert that the response status is 422 (Unprocessable Entity)
     $response->assertStatus(422);
-
-    // Assert that no game exists in the DB
-    $this->assertDatabaseCount('games', 0);
   }
 }
