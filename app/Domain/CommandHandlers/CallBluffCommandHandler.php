@@ -7,9 +7,11 @@ use App\Domain\Commands\CallBluffCommand;
 
 class CallBluffCommandHandler
 {
+  public function __construct(private GameAggregate $gameAggregate) {}
+
   public function __invoke(CallBluffCommand $command)
   {
-    GameAggregate::retrieve($command->getGameUuid())
+    $this->gameAggregate::retrieve($command->getGameUuid())
       ->playerCalledBluff($command->getPlayerName())
       ->persist();
   }

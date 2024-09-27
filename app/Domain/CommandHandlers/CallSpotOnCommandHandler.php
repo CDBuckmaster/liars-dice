@@ -7,9 +7,11 @@ use App\Domain\Commands\CallSpotOnCommand;
 
 class CallSpotOnCommandHandler
 {
+  public function __construct(private GameAggregate $gameAggregate) {}
+
   public function __invoke(CallSpotOnCommand $command)
   {
-    GameAggregate::retrieve($command->getGameUuid())
+    $this->gameAggregate::retrieve($command->getGameUuid())
       ->playerCalledSpotOn($command->getPlayerName())
       ->persist();
   }
