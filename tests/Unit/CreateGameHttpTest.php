@@ -6,7 +6,7 @@ use Tests\TestCase;
 use Mockery\MockInterface;
 use PHPUnit\Framework\Attributes\Test;
 
-class GameCreateHttpTest extends TestCase
+class CreateGameHttpTest extends TestCase
 {
   public function tearDown(): void
   {

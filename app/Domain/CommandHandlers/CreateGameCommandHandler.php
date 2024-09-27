@@ -24,11 +24,8 @@ class CreateGameCommandHandler
     ];
     $game->save();
 
-    $startingDice = rollDicePerPlayer(array_fill_keys($command->getPlayers(), self::STARTING_DICE));
-
     $this->gameAggregate::retrieve($command->getGameUuid())
       ->createGame($command->getPlayers(), $startingPlayer)
-      ->rerollDice($startingDice)
       ->persist();
   }
 }

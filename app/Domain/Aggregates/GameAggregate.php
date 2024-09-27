@@ -30,6 +30,7 @@ final class GameAggregate extends AggregateRoot
     }
 
     $this->recordThat(new GameWasCreated($players, $firstPlayer));
+    $this->rerollDiceAndRecord();
 
     return $this;
   }
@@ -249,8 +250,7 @@ final class GameAggregate extends AggregateRoot
 
   private function rerollDiceAndRecord(): void
   {
-    $newDiceRoll = rollDicePerPlayer($this->diceCount);
-
+    $newDiceRoll = $this->rollDicePerPlayer($this->diceCount);
     $this->recordThat(new DiceWereRerolled($newDiceRoll));
   }
 
@@ -268,5 +268,16 @@ final class GameAggregate extends AggregateRoot
     } else {
       $this->rerollDiceAndRecord();
     }
+  }
+
+  private function rollDicePerPlayer(array $players): array
+  {
+    $rolls = [];
+    foreach ($players as $player => $diceRemaining) {
+      for ($i = 0; $i < $diceRemaining; $i++) {
+        $rolls[$player][] = random_int(1, 6);
+      }
+    }
+    return $rolls;
   }
 }
