@@ -5,9 +5,26 @@ namespace Tests\Unit;
 use Tests\TestCase;
 use Mockery\MockInterface;
 use PHPUnit\Framework\Attributes\Test;
+use App\Models\Game;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class CreatePlayerActionHttpTest extends TestCase
 {
+  use RefreshDatabase;
+
+  public function setup(): void
+  {
+    parent::setUp();
+    // I know it's no longer a unit test by any means, but the route level binding is messing with things
+    Game::create([
+      'uuid' => '37ffb296-3a81-4b98-ad07-07f79822436a',
+      'metadata' => [
+        'players' => ['Han', 'Luke'],
+        'current_player' => 'Han',
+      ],
+    ]);
+  }
+
   public function tearDown(): void
   {
     parent::tearDown();
@@ -21,10 +38,9 @@ class CreatePlayerActionHttpTest extends TestCase
       $mock->shouldReceive('dispatch')->once();
     });
 
-    // Simulate a request to create a new game
-    $response = $this->post('/api/games/actions', [
+    // Simulate a request to create a player action
+    $response = $this->post('/api/games/37ffb296-3a81-4b98-ad07-07f79822436a/actions', [
       'player' => 'Han',
-      'game_uuid' => '37ffb296-3a81-4b98-ad07-07f79822436a',
       'action' => 'make_bid',
       'arguments' => [
         'quantity' => 2,
@@ -33,6 +49,7 @@ class CreatePlayerActionHttpTest extends TestCase
     ]);
 
     // Assert that the response status is 201 (Created)
+    $response->assertStatus(201);
     $response->assertJson(["uuid" => "37ffb296-3a81-4b98-ad07-07f79822436a"]);
   }
 
@@ -43,10 +60,9 @@ class CreatePlayerActionHttpTest extends TestCase
       $mock->shouldNotReceive('dispatch');
     });
 
-    // Simulate a request to create a new game
-    $response = $this->post('/api/games/actions', [
+    // Simulate a request to create a player action
+    $response = $this->post('/api/games/37ffb296-3a81-4b98-ad07-07f79822436a/actions', [
       'player' => 'Han',
-      'game_uuid' => '37ffb296-3a81-4b98-ad07-07f79822436a',
       'action' => 'make_bid',
       'arguments' => [
         'face' => 4,
@@ -64,10 +80,9 @@ class CreatePlayerActionHttpTest extends TestCase
       $mock->shouldNotReceive('dispatch');
     });
 
-    // Simulate a request to create a new game
-    $response = $this->post('/api/games/actions', [
+    // Simulate a request to create a player action
+    $response = $this->post('/api/games/37ffb296-3a81-4b98-ad07-07f79822436a/actions', [
       'player' => 'Han',
-      'game_uuid' => '37ffb296-3a81-4b98-ad07-07f79822436a',
       'action' => 'nonsense',
     ]);
 
