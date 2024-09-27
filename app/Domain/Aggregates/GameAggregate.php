@@ -14,6 +14,8 @@ use App\Models\Game;
 
 final class GameAggregate extends AggregateRoot
 {
+  const STARTING_DICE_COUNT = 5;
+
   private ?string $nextPlayer = null;
   private ?string $lastPlayer = null;
   private ?int $lastBidQuantity = null;
@@ -236,7 +238,7 @@ final class GameAggregate extends AggregateRoot
 
     $this->nextPlayer = $event->getFirstPlayer();
     $this->diceValues = array_fill_keys($event->getPlayers(), []);
-    $this->diceCount = array_fill_keys($event->getPlayers(), 5);
+    $this->diceCount = array_fill_keys($event->getPlayers(), self::STARTING_DICE_COUNT);
   }
 
   /**

@@ -7,7 +7,7 @@ use Spatie\EventSourcing\Commands\HandledBy;
 use App\Domain\CommandHandlers\CreateGameCommandHandler;
 
 #[HandledBy(CreateGameCommandHandler::class)]
-class CreateGameCommand implements CommandInterface
+final class CreateGameCommand implements CommandInterface
 {
   protected string $gameUuid;
   protected array $players;

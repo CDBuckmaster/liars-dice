@@ -4,7 +4,7 @@ namespace App\Domain\Events;
 
 use Spatie\EventSourcing\StoredEvents\ShouldBeStored;
 
-class GameWasCreated extends ShouldBeStored
+final class GameWasCreated extends ShouldBeStored
 {
   public function __construct(
     private array $players,

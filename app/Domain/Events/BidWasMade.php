@@ -4,7 +4,7 @@ namespace App\Domain\Events;
 
 use Spatie\EventSourcing\StoredEvents\ShouldBeStored;
 
-class BidWasMade extends ShouldBeStored
+final class BidWasMade extends ShouldBeStored
 {
   public function __construct(private string $player, private int $quantity, private int $face) {}
 

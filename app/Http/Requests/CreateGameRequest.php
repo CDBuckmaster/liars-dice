@@ -7,7 +7,7 @@ use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Contracts\Validation\Validator;
 use Symfony\Component\HttpFoundation\Response;
 
-class CreateGameRequest extends FormRequest
+final class CreateGameRequest extends FormRequest
 {
   public function rules(): array
   {

@@ -5,7 +5,7 @@ namespace App\Domain\CommandHandlers;
 use App\Domain\Aggregates\GameAggregate;
 use App\Domain\Commands\CallSpotOnCommand;
 
-class CallSpotOnCommandHandler
+final class CallSpotOnCommandHandler
 {
   public function __construct(private GameAggregate $gameAggregate) {}
 

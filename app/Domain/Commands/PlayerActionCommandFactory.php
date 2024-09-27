@@ -2,7 +2,7 @@
 
 namespace App\Domain\Commands;
 
-class PlayerActionCommandFactory
+final class PlayerActionCommandFactory
 {
   const CALL_BLUFF_ACTION_TYPE = 'call_bluff';
   const CALL_SPOT_ON_ACTION_TYPE = 'call_spot_on';

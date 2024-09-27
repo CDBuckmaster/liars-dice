@@ -6,15 +6,13 @@ use App\Domain\Aggregates\GameAggregate;
 use App\Domain\Commands\CreateGameCommand;
 use App\Models\Game;
 
-class CreateGameCommandHandler
+final class CreateGameCommandHandler
 {
-  // @todo: Move this elsewhere, might need to define a game entity for this
-  const STARTING_DICE = 5;
-
   public function __construct(private GameAggregate $gameAggregate) {}
 
   public function __invoke(CreateGameCommand $command)
   {
+    // Create initial state
     $startingPlayer = $command->getPlayers()[array_rand($command->getPlayers())];
     $game = new Game();
     $game->uuid = $command->getGameUuid();
@@ -24,6 +22,7 @@ class CreateGameCommandHandler
     ];
     $game->save();
 
+    // Begin event sourcing
     $this->gameAggregate::retrieve($command->getGameUuid())
       ->createGame($command->getPlayers(), $startingPlayer)
       ->persist();

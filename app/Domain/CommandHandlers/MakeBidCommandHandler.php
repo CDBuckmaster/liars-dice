@@ -5,7 +5,7 @@ namespace App\Domain\CommandHandlers;
 use App\Domain\Aggregates\GameAggregate;
 use App\Domain\Commands\MakeBidCommand;
 
-class MakeBidCommandHandler
+final class MakeBidCommandHandler
 {
   public function __construct(private GameAggregate $gameAggregate) {}
 

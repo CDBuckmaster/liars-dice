@@ -5,7 +5,7 @@ namespace App\Domain\CommandHandlers;
 use App\Domain\Aggregates\GameAggregate;
 use App\Domain\Commands\CallBluffCommand;
 
-class CallBluffCommandHandler
+final class CallBluffCommandHandler
 {
   public function __construct(private GameAggregate $gameAggregate) {}
 
