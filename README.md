@@ -164,3 +164,11 @@ API is fairly simple, routes are divided between write and read endpoints:
 Tests can be run with `./vendor/bin/sail artisan test`.
 
 They aren't complete, the query endpoints don't have tests yet as I need to experiment with a proper way of seeding Spatie's Stored Event table.
+
+## TODO
+
+- [ ] Create a factory for inserting events in DB directly for testing
+- [ ] Rewriten HTTP tests to be fully functional, seeding DB with event factory
+- [ ] Write functional tests for queries
+- [ ] Break down GameAggregate into smaller parts
+- [ ] Add additional query endpoints to make better use of Event Sourcing (such as game statistics like who calls most bluffs)
